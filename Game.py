@@ -4,7 +4,6 @@ from pythongame.enimies.ShieldUser import ShieldUser
 from pythongame.enimies.BadGuy import BadGuy
 from pythongame.enimies.Slime import Slime
 from utils.SoundEffects import SoundEffects as se
-from utils.SoundEffects import *
 import time
 import random
 
@@ -59,7 +58,7 @@ class Game:
             userOption = self.getValidOption()
 
             if userOption == 1:
-                self.se.chimeSound()
+                self.se.chime_sound()
                 time.sleep(1)
                 self.playing = True
                 self.se.stopMenu()
@@ -122,7 +121,7 @@ class Game:
 
                 badGuySelected = self.checkForTaunt(self.badGuys)
                 print(f"\nYou attacked {badGuySelected.getName()}!")
-                self.se.attackSound()
+                self.se.attack_sound()
 
                 badGuySelected.damaged(self.player.attack())
                 self.potionDrop(badGuySelected)
@@ -152,6 +151,7 @@ class Game:
 
     def meleePhase(self, badGuy):
         enemyOption = random.randrange(1, 3)
+        print(type(badGuy))
         if enemyOption == 1:
             print(f"\n{badGuy.getName()} attacked!")
             damage = Melee.attack(badGuy)
@@ -198,7 +198,7 @@ class Game:
             return
 
         if isinstance(badGuy, Melee):
-            self.meleePhase(BadGuy)
+            self.meleePhase(badGuy)
 
         elif isinstance(badGuy, ShieldUser):
             self.shieldUserPhase(badGuy)
@@ -230,7 +230,7 @@ class Game:
         while True:
             try:
                 userOption = int(input())
-                self.se.clickSound()
+                self.se.ding_sound()
                 break
             except ValueError:
                 print("Can not enter nothing!!")
@@ -247,7 +247,7 @@ class Game:
 
     def isPlayerDead(self):
         if self.player.health <= 0:
-            self.se.deathSound()
+            self.se.death_sound()
             time.sleep(4)
             print("\n\nYou Died!")
             time.sleep(1)
