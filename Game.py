@@ -1,27 +1,18 @@
 from player.Player import Player
 from pythongame.enimies.Melee import Melee
 from pythongame.enimies.ShieldUser import ShieldUser
-from pythongame.enimies.BadGuy import BadGuy
 from pythongame.enimies.Slime import Slime
 from utils.SoundEffects import SoundEffects as se
 import time
 import random
 
 
-def displayUserOptions():
-    print("""
-    Select an option:
-        1. Attack    2. Block
-        3. Special   4. Heal
-            """)
-
-
-def setBadGuys():
+def set_enemies():
     return [[(Melee(15, 20, "Melee Grunt")), (ShieldUser(20, 5, "Shield Grunt"))],
             [Slime(200, 1, "Greg, The Slime")]]
 
 
-def setBosses():
+def set_bosses():
     return [[Melee(50, 20, "Big Boy Slasher"), ShieldUser(50, 10, "Small Boy Hank")],
             [Melee(100, 15, "The Slashy Slasher")]]
 
@@ -32,22 +23,20 @@ class Game:
         self.player = Player()
         self.running, self.playing = True, False
         self.currentRound = 1
-        self.basicGroups = setBadGuys()
-        self.bossGroups = setBosses()
-        self.badGuys = None
-        # self.menu = Menu(self)
+        self.basicGroups = set_enemies()
+        self.bossGroups = set_bosses()
+        self.enemies = None
 
-    def badGuyRoundSelect(self):
-
-        self.basicGroups = setBadGuys()
-        self.bossGroups = setBosses()
+    def enemies_round_select(self):
+        self.basicGroups = set_enemies()
+        self.bossGroups = set_bosses()
 
         if self.currentRound < 3:
             return random.choice(self.basicGroups)
         elif self.currentRound == 3:
             return random.choice(self.bossGroups)
 
-    def mainMenu(self):
+    def game_options(self):
         while self.running:
 
             if not self.se.playingMusic:
@@ -55,14 +44,14 @@ class Game:
 
             print("1. Play Game   2. Exit Game")
 
-            userOption = self.getValidOption()
+            userOption = self.get_valid_option()
 
             if userOption == 1:
                 self.se.chime_sound()
                 time.sleep(1)
                 self.playing = True
                 self.se.stopMenu()
-                self.playGame()
+                self.play_game()
 
             elif userOption == 2:
                 print("Exiting Game...")
@@ -71,162 +60,55 @@ class Game:
                 self.playing = False
                 self.running = False
 
-    def chooseBadGuy(self):
-        count = 1
-        amountOfBadGuys = len(self.badGuys)
+    def print_enemies(self):
+        for index, badGuy in enumerate(self.enemies):
+            print(f"{index + 1}. {badGuy.getName()}")
 
-        for badGuy in self.badGuys:
-            print(f"{count}. {badGuy.getName()}")
-            count += 1
+    def choose_enemy(self):
 
-        chosenBadGuy = self.getValidOption()
+        total_enemies = len(self.enemies)
+        self.print_enemies()
+        chosenBadGuy = self.get_valid_option()
 
         while True:
-            if chosenBadGuy > amountOfBadGuys or chosenBadGuy <= 0:
+            if chosenBadGuy > total_enemies or chosenBadGuy <= 0:
                 print("Not an option")
-                chosenBadGuy = self.getValidOption()
+                chosenBadGuy = self.get_valid_option()
+            elif chosenBadGuy < 0:
+                chosenBadGuy = 0
             else:
+                chosenBadGuy -= 1
                 break
 
-        chosenBadGuy -= 1
-
-        if chosenBadGuy < 0:
-            chosenBadGuy = 0
-
-        badGuyChosen = self.badGuys[chosenBadGuy]
-
-        return badGuyChosen
+        return self.enemies[chosenBadGuy]
 
     def checkForTaunt(self, badGuys):
         for badGuy in badGuys:
             if isinstance(badGuy, ShieldUser) and badGuy.isTaunting():
                 return badGuy
             else:
-                return self.chooseBadGuy()
+                return self.choose_enemy()
 
-    def potionDrop(self, badGuy):
-        if badGuy.health <= 0:
-            potionChance = random.randrange(100)
-            if potionChance <= 30:
-                time.sleep(0.5)
-                print("\nYou got a potion! 🧪🧪")
-                self.player.getPotion()
+    def potion_drop(self):
+        potionChance = random.randrange(100)
+        if potionChance <= 30:
+            self.player.getPotion()
 
-    def playerPhase(self, userInput):
-        valid = False
-
-        while not valid:
-
-            if userInput == 1:
-
-                badGuySelected = self.checkForTaunt(self.badGuys)
-                print(f"\nYou attacked {badGuySelected.getName()}!")
-                self.se.attack_sound()
-
-                badGuySelected.damaged(self.player.attack())
-                self.potionDrop(badGuySelected)
-
-            elif userInput == 2:
-                print("You are now blocking!")
-                self.player.block()
-
-            elif userInput == 3:
-                badGuySelected = self.chooseBadGuy()
-                print("You tried using your special...")
-                time.sleep(0.5)
-                BadGuy.damaged(badGuySelected, self.player.special())
-
-            elif userInput == 4:
-                print("Attempting to heal...")
-                time.sleep(0.5)
-                self.player.heal()
-
-            else:
-                print("Not a valid option, try again.")
-                displayUserOptions()
-                userInput = self.getValidOption()
-                continue
-
-            valid = True
-
-    def meleePhase(self, badGuy):
-        enemyOption = random.randrange(1, 3)
-        print(type(badGuy))
-        if enemyOption == 1:
-            print(f"\n{badGuy.getName()} attacked!")
-            damage = Melee.attack(badGuy)
-            self.player.damageReceived(damage)
-
-        elif enemyOption == 2:
-            print(f"\n{badGuy.getName()} tried using slash...")
-            time.sleep(1.0)
-            self.player.damageReceived(badGuy.slash())
-
-    def shieldUserPhase(self, badGuy):
-        badGuy.stopTauting()
-        enemyOption = random.randrange(1, 4)
-        if enemyOption == 1:
-            print(f"\n{badGuy.getName()} attacked!")
-            damage = ShieldUser.attack(badGuy)
-            self.player.damageReceived(damage)
-
-        elif enemyOption == 2:
-            badGuy.block()
-        elif enemyOption == 3:
-            badGuy.taunt()
-
-    def slimePhase(self, badGuy):
-        enemyOption = random.randrange(1, 10)
-        if badGuy.angeeMeter >= 5:
-            damage = badGuy.bePeaceful()
-            self.player.damageReceived(damage)
-        else:
-            if enemyOption == 10:
-                print(f"\n{badGuy.getName()} attacked!")
-                damage = Slime.attack(badGuy)
-                self.player.damageReceived(damage)
-
-            elif enemyOption <= 7:
-                damage = badGuy.bePeaceful()
-                self.player.damageReceived(damage)
-
-            elif enemyOption == 9:
-                self.player.damageReceived(badGuy.spitSlime())
-
-    def badGuyPhase(self, badGuy):
-        if self.player.health <= 0:
-            return
-
-        if isinstance(badGuy, Melee):
-            self.meleePhase(badGuy)
-
-        elif isinstance(badGuy, ShieldUser):
-            self.shieldUserPhase(badGuy)
-
-        elif isinstance(badGuy, Slime):
-            self.slimePhase(badGuy)
-
-        else:
-            print("Error with Bad guy random option")
-
-    def displayBadGuys(self):
-        for badGuy in self.badGuys:
+    def display_enemies(self):
+        for badGuy in self.enemies:
             print(f"""\n {badGuy.name} 
                Health 💗      {badGuy.health}
                Damage ⚔️   {badGuy.damage}\n""")
 
-    def removeDead(self):
-        for badGuy in self.badGuys:
-            if badGuy.isDead():
-                self.badGuys.pop(self.badGuys.index(badGuy))
+    def remove_dead_enemies(self):
+        for enemy in self.enemies:
+            if enemy.isDead():
+                self.enemies.pop(self.enemies.index(enemy))
 
-    def checkIfRoundOver(self):
-        roundOver = False
-        if len(self.badGuys) <= 0:
-            roundOver = True
-        return roundOver
+    def is_round_over(self):
+        return True if len(self.enemies) <= 0 else False
 
-    def getValidOption(self):
+    def get_valid_option(self):
         while True:
             try:
                 userOption = int(input())
@@ -239,63 +121,73 @@ class Game:
 
         return userOption
 
-    def badGuyTurn(self):
-        for badGuy in self.badGuys:
-            if not badGuy.isDead():
-                self.badGuyPhase(badGuy)
+    def enemy_turn(self):
+        if self.player.health <= 0:
+            return
+
+        for enemy in self.enemies:
+            if not enemy.isDead():
+                enemy.enemy_turn()
                 time.sleep(1.5)
 
-    def isPlayerDead(self):
+    def is_player_dead(self):
         if self.player.health <= 0:
+            self.se.battleMusicStop()
             self.se.death_sound()
             time.sleep(4)
             print("\n\nYou Died!")
             time.sleep(1)
             self.playing = False
-            self.se.battleMusicStop()
 
-    def playGame(self):
+            return True
+
+    def play_game(self):
 
         self.player.resetPlayer()
 
-        time.sleep(1)
-        self.currentRound = 1
-        self.badGuys = self.badGuyRoundSelect()
+        currentRound = 1
+        self.enemies = self.enemies_round_select()
         self.se.battleMusicPlay()
 
         while self.playing:
 
             self.player.unblock()
-            self.removeDead()
-            roundOver = self.checkIfRoundOver()
+            self.remove_dead_enemies()
+            roundOver = self.is_round_over()
 
             if roundOver:
-                self.currentRound += 1
-                if self.currentRound > 3:
-                    self.playing = False
-                    self.se.battleMusicStop()
-                    self.mainMenu()
+                currentRound += 1
 
-                if not self.running:
-                    break
+            if currentRound > 3:
+                self.playing = False
+                self.enemies = self.enemies_round_select()
 
-                self.badGuys = self.badGuyRoundSelect()
+            self.display_enemies()
+            self.player.display_player_stats()
+            self.player.display_user_options()
 
-            self.displayBadGuys()
-            self.player.displayUser()
-            displayUserOptions()
+            user_option = self.get_valid_option()
+            chosen_enemy = self.choose_enemy()
 
-            userOption = self.getValidOption()
-            self.playerPhase(userOption)
+            self.player.player_phase(user_option, chosen_enemy)
 
             time.sleep(1.5)
 
-            self.badGuyTurn()
-            self.isPlayerDead()
+            self.enemy_turn()
+
+            if self.is_player_dead():
+                self.playing = False
+
+        self.se.battleMusicStop()
+        self.game_options()
 
 
-game = Game()
+def main():
+    game = Game()
 
-while game.running:
+    while game.running:
+        game.game_options()
 
-    game.mainMenu()
+
+if __name__ == "__main__":
+    main()

@@ -1,7 +1,10 @@
-from pythongame.enimies.BadGuy import BadGuy
+import random
+
+from pythongame.enimies.Enemies import Enemies
 
 
-class ShieldUser(BadGuy):
+class ShieldUser(Enemies):
+
     focus = 0
     blocking = False
     taunting = False
@@ -21,13 +24,13 @@ class ShieldUser(BadGuy):
             self.dead = True
 
     def block(self):
-        print(f"{BadGuy.getName(self)} is blocking!")
+        print(f"{Enemies.getName(self)} is blocking!")
         self.focus += 5
         self.blocking = True
 
     def taunt(self):
         if self.focus >= 10:
-            print(f"{BadGuy.getName(self)} is taunting!")
+            print(f"{Enemies.getName(self)} is taunting!")
             self.taunting = True
         else:
             self.block()
@@ -38,3 +41,18 @@ class ShieldUser(BadGuy):
 
     def stopTauting(self):
         self.taunting = False
+
+    def enemy_turn(self):
+
+        self.stopTauting()
+        enemyOption = random.randrange(1, 4)
+
+        if enemyOption == 1:
+            print(f"\n{self.getName()} attacked!")
+            return self.attack()
+
+        elif enemyOption == 2:
+            self.block()
+
+        elif enemyOption == 3:
+            self.taunt()

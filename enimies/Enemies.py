@@ -1,4 +1,7 @@
-class BadGuy:
+from abc import ABC, abstractmethod
+
+
+class Enemies(ABC):
 
     def __init__(self, health, damage, name):
         self.health = health
@@ -21,3 +24,6 @@ class BadGuy:
     def isDead(self):
         return self.dead
 
+    @abstractmethod
+    def enemy_turn(self):
+        pass
