@@ -54,7 +54,7 @@ class Menu:
         self.display.blit(text_surface, text_rect)
 
     def mainMenu(self):
-        if not self.se.playingMusic:
+        if not self.se.playing_music:
             self.se.playMenu()
 
         self.draw_text('Play Game', 30, self.DISPLAY_W / 2 - 5, self.DISPLAY_H / 2 - 30)

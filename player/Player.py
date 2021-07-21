@@ -2,17 +2,17 @@ import time
 
 
 class Player:
-    health = 0
-    damage = 0
-    focus = 0
+    health: int
+    damage: int
+    focus: int
+    potion: int
     blocking = False
-    potion = 0
 
     def attack(self):
         self.focus += 10
         return self.damage
 
-    def damageReceived(self, damage):
+    def damaged(self, damage):
         if self.blocking:
             self.health -= (damage / 2)
         else:
@@ -27,9 +27,9 @@ class Player:
             print("You don't have enough focus")
             return 0
 
-    def resetPlayer(self):
+    def reset_player(self):
         self.health = 200
-        self.damage = 100000
+        self.damage = 20000000
         self.focus = 0
         self.blocking = False
         self.potion = 0
@@ -64,7 +64,7 @@ class Player:
     def magic(self):
         pass
 
-    def getPotion(self):
+    def new_potion(self):
         print("\nYou got a potion! 🧪🧪")
         time.sleep(0.5)
         self.potion += 1
@@ -79,24 +79,21 @@ class Player:
 
     def player_phase(self, user_turn_choice, enemy):
 
-        while True:
-            if user_turn_choice == 1:
-                print(f"You attacked {enemy.getName()}!")
-                return self.attack()
+        if user_turn_choice == 1:
+            print(f"You attacked {enemy.get_name()}!")
+            time.sleep(1.5)
+            enemy.damaged(self.attack())
 
-            elif user_turn_choice == 2:
-                self.block()
-                return 0
+        elif user_turn_choice == 2:
+            self.block()
+            time.sleep(1.5)
 
-            elif user_turn_choice == 3:
-                print("You tried using your special...")
-                time.sleep(0.5)
-                return self.special()
+        elif user_turn_choice == 3:
+            print("You tried using your special...")
+            time.sleep(0.5)
+            enemy.damaged(self.special())
+            time.sleep(1.5)
 
-            elif user_turn_choice == 4:
-                self.heal()
-
-            else:
-                print("Not a valid option, try again.")
-                self.display_user_options()
-                continue
+        elif user_turn_choice == 4:
+            self.heal()
+            time.sleep(1.5)

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
 
-class Enemies(ABC):
+class Enemy(ABC):
 
-    def __init__(self, health, damage, name):
+    def __init__(self, health: int, damage: int, name: str):
         self.health = health
         self.damage = damage
         self.name = name
@@ -18,12 +18,12 @@ class Enemies(ABC):
         if self.health <= 0:
             self.dead = True
 
-    def getName(self):
+    def get_name(self):
         return self.name
 
-    def isDead(self):
+    def is_dead(self):
         return self.dead
 
     @abstractmethod
-    def enemy_turn(self):
+    def enemy_phase(self, player):
         pass

@@ -22,96 +22,105 @@ class Game:
         self.se = se()
         self.player = Player()
         self.running, self.playing = True, False
-        self.currentRound = 1
-        self.basicGroups = set_enemies()
-        self.bossGroups = set_bosses()
+        self.current_round = 1
+        self.basic_groups = set_enemies()
+        self.boss_groups = set_bosses()
         self.enemies = None
 
     def enemies_round_select(self):
-        self.basicGroups = set_enemies()
-        self.bossGroups = set_bosses()
+        self.basic_groups = set_enemies()
+        self.boss_groups = set_bosses()
 
-        if self.currentRound < 3:
-            return random.choice(self.basicGroups)
-        elif self.currentRound == 3:
-            return random.choice(self.bossGroups)
+        if self.current_round < 3:
+            return random.choice(self.basic_groups)
+        elif self.current_round == 3:
+            return random.choice(self.boss_groups)
 
     def game_options(self):
         while self.running:
 
-            if not self.se.playingMusic:
+            if not self.se.playing_music:
                 self.se.playMenu()
 
             print("1. Play Game   2. Exit Game")
 
-            userOption = self.get_valid_option()
+            user_option = self.get_valid_number()
 
-            if userOption == 1:
+            if user_option == 1:
                 self.se.chime_sound()
                 time.sleep(1)
                 self.playing = True
-                self.se.stopMenu()
+                self.se.stop_menu_music()
                 self.play_game()
 
-            elif userOption == 2:
+            elif user_option == 2:
                 print("Exiting Game...")
-                time.sleep(1)
-                self.se.stopMenu()
-                self.playing = False
+                time.sleep(0.5)
+                self.se.stop_menu_music()
                 self.running = False
 
     def print_enemies(self):
         for index, badGuy in enumerate(self.enemies):
-            print(f"{index + 1}. {badGuy.getName()}")
+            print(f"{index + 1}. {badGuy.get_name()}")
+
+    def get_taunter(self):
+        for enemy in self.enemies:
+            if isinstance(enemy, ShieldUser):
+                return enemy if enemy.is_taunting() else None
+
+        return None
 
     def choose_enemy(self):
+        if self.player.blocking:
+            return
 
-        total_enemies = len(self.enemies)
         self.print_enemies()
-        chosenBadGuy = self.get_valid_option()
+        chosen_bad_guy = self.get_valid_number()
+        taunting_enemy = self.get_taunter()
+
+        if taunting_enemy is not None:
+            return taunting_enemy
 
         while True:
-            if chosenBadGuy > total_enemies or chosenBadGuy <= 0:
+            if chosen_bad_guy > len(self.enemies) or chosen_bad_guy < 1:
                 print("Not an option")
-                chosenBadGuy = self.get_valid_option()
-            elif chosenBadGuy < 0:
-                chosenBadGuy = 0
+                chosen_bad_guy = self.get_valid_number()
             else:
-                chosenBadGuy -= 1
+                chosen_bad_guy -= 1
                 break
 
-        return self.enemies[chosenBadGuy]
+        return self.enemies[chosen_bad_guy]
 
-    def checkForTaunt(self, badGuys):
-        for badGuy in badGuys:
-            if isinstance(badGuy, ShieldUser) and badGuy.isTaunting():
-                return badGuy
+    def check_for_taunt(self, enemies: dict):
+        for enemy in enemies:
+            if isinstance(enemy, ShieldUser) and enemy.is_taunting():
+                return enemy
             else:
                 return self.choose_enemy()
 
     def potion_drop(self):
-        potionChance = random.randrange(100)
-        if potionChance <= 30:
-            self.player.getPotion()
+        potion_chance = random.randrange(100)
+        if potion_chance <= 30:
+            self.player.new_potion()
 
     def display_enemies(self):
-        for badGuy in self.enemies:
-            print(f"""\n {badGuy.name} 
-               Health 💗      {badGuy.health}
-               Damage ⚔️   {badGuy.damage}\n""")
+        for enemy in self.enemies:
+            print(f"""\n {enemy.name} 
+               Health 💗      {enemy.health}
+               Damage ⚔️   {enemy.damage}\n""")
 
     def remove_dead_enemies(self):
         for enemy in self.enemies:
-            if enemy.isDead():
+            if enemy.is_dead():
                 self.enemies.pop(self.enemies.index(enemy))
 
     def is_round_over(self):
         return True if len(self.enemies) <= 0 else False
 
-    def get_valid_option(self):
+    def get_valid_number(self):
         while True:
             try:
-                userOption = int(input())
+                user_option = int(input())
                 self.se.ding_sound()
                 break
             except ValueError:
@@ -119,66 +128,83 @@ class Game:
             except TypeError:
                 print("Must be a valid number.")
 
-        return userOption
+        return user_option
 
-    def enemy_turn(self):
+    def enemies_phases(self):
         if self.player.health <= 0:
             return
 
         for enemy in self.enemies:
-            if not enemy.isDead():
-                enemy.enemy_turn()
+            if not enemy.is_dead():
+                enemy.enemy_phase(self.player)
                 time.sleep(1.5)
 
     def is_player_dead(self):
-        if self.player.health <= 0:
-            self.se.battleMusicStop()
-            self.se.death_sound()
-            time.sleep(4)
-            print("\n\nYou Died!")
-            time.sleep(1)
+        return True if self.player.health <= 0 else False
+
+    def display_all_displayables(self):
+        self.display_enemies()
+        self.player.display_player_stats()
+        self.player.display_user_options()
+
+    def new_round(self, current_round):
+        current_round += 1
+        self.enemies = self.enemies_round_select()
+
+        if current_round > 2:
             self.playing = False
 
-            return True
+        return current_round
+
+    def player_died(self):
+
+        self.se.stop_battle_music()
+        self.se.death_sound()
+
+        time.sleep(4)
+
+        print("\n\nYou Died!")
+
+        self.playing = False
+
+    def get_valid_player_option(self):
+        while True:
+            user_option = self.get_valid_number()
+            if user_option < 1 or user_option > 4:
+                print("Not a valid player option! Try Again.")
+                continue
+
+            if user_option == 2:
+                self.player.blocking = True
+
+            return user_option
 
     def play_game(self):
 
-        self.player.resetPlayer()
-
-        currentRound = 1
+        self.player.reset_player()
         self.enemies = self.enemies_round_select()
-        self.se.battleMusicPlay()
+        self.se.play_battle_music()
+        current_round = 1
 
         while self.playing:
-
-            self.player.unblock()
             self.remove_dead_enemies()
-            roundOver = self.is_round_over()
 
-            if roundOver:
-                currentRound += 1
+            if self.is_round_over():
+                current_round = self.new_round(current_round)
 
-            if currentRound > 3:
-                self.playing = False
-                self.enemies = self.enemies_round_select()
+            self.display_all_displayables()
 
-            self.display_enemies()
-            self.player.display_player_stats()
-            self.player.display_user_options()
-
-            user_option = self.get_valid_option()
+            player_option = self.get_valid_player_option()
             chosen_enemy = self.choose_enemy()
 
-            self.player.player_phase(user_option, chosen_enemy)
-
-            time.sleep(1.5)
-
-            self.enemy_turn()
+            self.player.player_phase(player_option, chosen_enemy)
+            self.enemies_phases()
+            self.player.unblock()
 
             if self.is_player_dead():
-                self.playing = False
+                self.player_died()
 
-        self.se.battleMusicStop()
+        self.se.stop_battle_music()
         self.game_options()
 
 

@@ -34,27 +34,31 @@ class SoundEffects:
     def __init__(self):
         self.menuMusic = pg.mixer.Sound(os.path.join("assets", "music", "menu_music.mp3"))
         self.battleMusic = pg.mixer.Sound(os.path.join("assets", "music", "keep_moving(Battle Music).mp3"))
-        self.playingMusic = False
+        self.playing_music = False
 
     def playMenu(self):
         self.menuMusic.play()
-        self.playingMusic = True
+        self.playing_music = True
 
-    def stopMenu(self):
+    def stop_menu_music(self):
         self.menuMusic.stop()
-        self.playingMusic = False
+        self.playing_music = False
 
-    def battleMusicPlay(self):
+    def play_battle_music(self):
         self.battleMusic.play()
-        self.playingMusic = True
+        self.playing_music = True
 
-    def battleMusicStop(self):
+    def stop_battle_music(self):
         self.battleMusic.stop()
-        self.playingMusic = False
+        self.playing_music = False
 
     @staticmethod
     def ding_sound():
         pg.mixer.Sound(SoundEffects.soundEffects[0]).play()
+
+    @staticmethod
+    def attack_sound():
+        pg.mixer.Sound(SoundEffects.soundEffects[1]).play()
 
     @staticmethod
     def death_sound():
@@ -65,7 +69,6 @@ class SoundEffects:
         pg.mixer.Sound(SoundEffects.soundEffects[5]).play()
 
     @staticmethod
-    def attack_sound():
-        pg.mixer.Sound(SoundEffects.soundEffects[1]).play()
-
-
+    def song_transition(currentSong, nextSong):
+        currentSong.stop()
+        nextSong.play()
