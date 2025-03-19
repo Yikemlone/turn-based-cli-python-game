@@ -1,7 +1,6 @@
 import random
-
-from player import Player
-from pythongame.enimies.Enemy import Enemy
+from player.player import Player
+from enimies.enemy import Enemy
 
 
 class Slime(Enemy):

@@ -1,8 +1,7 @@
 import time
-
-from player import Player
-from pythongame.enimies.Enemy import Enemy
 import random
+from player.player import Player
+from enimies.enemy import Enemy
 
 
 class Melee(Enemy):

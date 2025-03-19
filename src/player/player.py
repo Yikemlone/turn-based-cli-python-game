@@ -1,7 +1,7 @@
 import time
+from enimies.enemy import Enemy
 
-
-class Player:
+class Player():
     health: int
     damage: int
     focus: int
@@ -29,7 +29,7 @@ class Player:
 
     def reset_player(self):
         self.health = 200
-        self.damage = 20000000
+        self.damage = 50
         self.focus = 0
         self.blocking = False
         self.potion = 0
@@ -77,7 +77,7 @@ class Player:
             3. Special   4. Heal
                 """)
 
-    def player_phase(self, user_turn_choice, enemy):
+    def player_phase(self, user_turn_choice, enemy : Enemy):
 
         if user_turn_choice == 1:
             print(f"You attacked {enemy.get_name()}!")

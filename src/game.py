@@ -1,10 +1,13 @@
-from player.Player import Player
-from pythongame.enimies.Melee import Melee
-from pythongame.enimies.ShieldUser import ShieldUser
-from pythongame.enimies.Slime import Slime
-from utils.SoundEffects import SoundEffects as se
 import time
 import random
+import platform
+import os
+from player.player import Player
+from enimies.melee import Melee
+from enimies.shielduser import ShieldUser
+from enimies.slime import Slime
+from utils.SoundEffects import SoundEffects as se
+from enimies.enemy import Enemy
 
 
 def set_enemies():
@@ -17,17 +20,25 @@ def set_bosses():
             [Melee(100, 15, "The Slashy Slasher")]]
 
 
+def clear_screen():
+    system = platform.system().lower()
+    if system == "windows":
+        os.system('cls')  # Windows
+    else:
+        os.system('clear')  # macOS/Linux
+
 class Game:
     def __init__(self):
-        self.se = se()
-        self.player = Player()
-        self.running, self.playing = True, False
-        self.current_round = 1
-        self.basic_groups = set_enemies()
-        self.boss_groups = set_bosses()
-        self.enemies = None
+        self.se : se = se()
+        self.player : Player = Player()
+        self.running : bool = True
+        self.playing : bool = False
+        self.current_round : int = 1
+        self.basic_groups : list[Enemy] = set_enemies()
+        self.boss_groups : list[Enemy]  = set_bosses()
+        self.enemies : list[Enemy] = None
 
-    def enemies_round_select(self):
+    def enemies_round_select(self) -> Enemy:
         self.basic_groups = set_enemies()
         self.boss_groups = set_bosses()
 
@@ -36,14 +47,12 @@ class Game:
         elif self.current_round == 3:
             return random.choice(self.boss_groups)
 
-    def game_options(self):
+    def game_main_menu(self) -> None:
         while self.running:
-
             if not self.se.playing_music:
                 self.se.playMenu()
 
             print("1. Play Game   2. Exit Game")
-
             user_option = self.get_valid_number()
 
             if user_option == 1:
@@ -59,9 +68,10 @@ class Game:
                 self.se.stop_menu_music()
                 self.running = False
 
+
     def print_enemies(self):
-        for index, badGuy in enumerate(self.enemies):
-            print(f"{index + 1}. {badGuy.get_name()}")
+        for index, bad_guy in enumerate(self.enemies):
+            print(f"{index + 1}. {bad_guy.get_name()}")
 
     def get_taunter(self):
         for enemy in self.enemies:
@@ -187,6 +197,7 @@ class Game:
         current_round = 1
 
         while self.playing:
+            clear_screen()
             self.remove_dead_enemies()
 
             if self.is_round_over():
@@ -205,14 +216,14 @@ class Game:
                 self.player_died()
 
         self.se.stop_battle_music()
-        self.game_options()
+        self.game_main_menu()
 
 
 def main():
     game = Game()
 
     while game.running:
-        game.game_options()
+        game.game_main_menu()
 
 
 if __name__ == "__main__":

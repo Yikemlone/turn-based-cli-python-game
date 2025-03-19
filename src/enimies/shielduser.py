@@ -1,6 +1,5 @@
 import random
-
-from pythongame.enimies.Enemy import Enemy
+from enimies.enemy import Enemy
 
 
 class ShieldUser(Enemy):
